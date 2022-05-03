@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import { getManager } from "typeorm";
 import { User } from "../entity/user.entity";
 import { RegisterValidation } from "../validation/register.validation";
-import bcryptjs from "bcryptjs"
+import bcryptjs from "bcryptjs";
+import { sign } from "jsonwebtoken";
 
 export const Register = async (req: Request, res: Response) => {
     const body = req.body;
@@ -51,8 +52,17 @@ export const Login = async (req: Request, res: Response) => {
             message: 'invalid credentials!'
         })
     }
-    
-    const {password, ...data} = user;
 
-    res.send(data);
+    const token = sign({
+        id: user.id,
+    }, "secret");
+
+    res.cookie('jwt', token, {
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+
+    res.send({
+        message: 'success'
+    });
 }
